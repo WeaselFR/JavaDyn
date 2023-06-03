@@ -33,8 +33,13 @@ function handleSubmit(e) {
   loadConfig()
     .then(config => loginUser(config, email, password))
     .then(result => {
-      setToken(result);
-      locationTo("../");
+      if (result.isAdmin) {
+        // Si l'utilisateur connecté est un administrateur, redirigez vers la page d'administration
+        locationTo("../admin");
+      } else {
+        // Sinon, redirigez vers la page principale
+        locationTo("../");
+      }
     })
     .catch(error => {
       if (error instanceof ErrorJson) {

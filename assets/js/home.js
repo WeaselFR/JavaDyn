@@ -8,7 +8,8 @@ async function loadConfig() {
 }
 
 function isLogin() {
-  return false;
+  const token = localStorage.getItem("token");
+  return token !== null;
 }
 
 function handleError(error) {
