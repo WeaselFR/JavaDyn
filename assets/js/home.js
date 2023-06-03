@@ -28,6 +28,20 @@ function handleError(error) {
   }
 }
 
+// Déplacer la fonction isLogin() ici avant son utilisation
+
+async function fetchData(url) {
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new ErrorJson({
+      status: res.status ? res.status : 500,
+      sorry: "Oups! Il y a un problème",
+      statusText: res.statusText,
+    });
+  }
+  return res.json();
+}
+
 loadConfig()
   .then(async (config) => {
     const { api } = config;

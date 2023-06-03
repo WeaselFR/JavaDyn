@@ -1,7 +1,16 @@
-if (isLogin()) {
-  locationTo("../");
-} else {
-  document.querySelector("#loginForm").addEventListener("submit", handleSubmit);
+function isLogin() {
+  const token = localStorage.getItem("token");
+  return token !== null;
+}
+
+function loadConfig() {
+  return fetch('config.json')
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Impossible de charger la configuration');
+      }
+      return response.json();
+    });
 }
 
 function handleSubmit(e) {
@@ -35,10 +44,10 @@ function handleSubmit(e) {
     .then(result => {
       if (result.isAdmin) {
         // Si l'utilisateur connecté est un administrateur, redirigez vers la page d'administration
-        locationTo("../admin");
+        window.location.href = "../admin";
       } else {
         // Sinon, redirigez vers la page principale
-        locationTo("../");
+        window.location.href = "../";
       }
     })
     .catch(error => {
@@ -82,6 +91,12 @@ function loginUser(config, email, password) {
     }
     return res.json();
   });
+}
+
+if (isLogin()) {
+  window.location.href = "../";
+} else {
+  document.querySelector("#loginForm").addEventListener("submit", handleSubmit);
 }
 
 // Les principales améliorations apportées sont les suivantes :
