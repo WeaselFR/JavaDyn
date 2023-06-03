@@ -98,9 +98,3 @@ if (isLogin()) {
 } else {
   document.querySelector("#loginForm").addEventListener("submit", handleSubmit);
 }
-
-// Les principales améliorations apportées sont les suivantes :
-// Les fonctions nommées ont été utilisées pour améliorer la lisibilité et la maintenabilité du code.
-// Les retours prématurés ont été évités pour éviter les problèmes de compréhension et de débogage.
-// Les constantes ont été utilisées pour stocker les éléments DOM réutilisables.
-// Les erreurs ont été gérées de manière appropriée en utilisant des promesses et des classes d'erreur personnalisées.
