@@ -1,53 +1,84 @@
 loadConfig()
-  .then(handleConfig)
+  .then(async (config) => {
+    const { api } = config;
+
+    if (!api) {
+      console.warn("api not found");
+
+      return;
+    }
+
+    try {
+      const datas = await Promise.all(
+        ["works", "categories"].map((path) =>
+          fetch(`${config.api}/${path}`)
+            .then((res) => (res.ok ? res.json() : res))
+            .catch((err) => err)
+        )
+      );
+
+      if (datas[0] instanceof Response || datas[0] instanceof TypeError) {
+        const { status, statusText } = datas[0];
+
+        throw new ErrorJson({
+          status: status ? status : 500,
+          sorry: "Oups! Il y a un problème",
+          statusText: statusText,
+        });
+      }
+
+      const loginLinkEl = document.querySelector(".login-link");
+
+      isLogin() ? admin() : visitor();
+
+      function visitor() {
+        const gallery = new Gallery(...datas);
+
+        gallery.initGallerySelector(".gallery");
+      }
+
+      function admin() {
+        const dashboard = new Dashboard(...datas, api);
+
+        dashboard.initGallerySelector(".gallery");
+
+        loginLinkEl.innerHTML = "logout";
+
+        loginLinkEl.addEventListener("click", onDisconnect, { once: true });
+
+        function onDisconnect(e) {
+          e.preventDefault();
+
+          dashboard.onDisconnectUser(e);
+
+          loginLinkEl.innerHTML = "login";
+        }
+      }
+    } catch (error) {
+      const gallery = document.querySelector(".gallery");
+
+      if (error instanceof ErrorJson) {
+        console.warn(error);
+
+        const errorBoundary = elementCatchError(error);
+
+        gallery.insertAdjacentElement("beforeend", errorBoundary);
+      } else {
+        console.error(error);
+
+        gallery.innerHTML = `<p class="error-container">Projets indisponible!</p>`;
+      }
+    }
+  })
   .catch(handleError);
 
-function handleConfig(config) {
-  const { api } = config;
-
-  if (!api) {
-    console.warn("api not found");
-    return;
+async function loadConfig() {
+  const response = await fetch('config.json');
+  if (!response.ok) {
+    throw new Error('Impossible de charger la configuration');
   }
-
-  Promise.all([
-    fetchData(`${api}/works`),
-    fetchData(`${api}/categories`)
-  ])
-    .then(handleData.bind(null, config))
-    .catch(handleError);
-}
-
-function handleData(config, [works, categories]) {
-  const gallery = document.querySelector(".gallery");
-
-  if (!works || !categories) {
-    gallery.innerHTML = `<p class="error-container">Projets indisponible!</p>`;
-    return;
-  }
-
-  const loginLinkEl = document.querySelector(".login-link");
-
-  isLogin() ? admin() : visitor();
-
-  function visitor() {
-    const gallery = new Gallery(works, categories);
-    gallery.initGallerySelector(".gallery");
-  }
-
-  function admin() {
-    const dashboard = new Dashboard(works, categories, config.api);
-    dashboard.initGallerySelector(".gallery");
-
-    loginLinkEl.innerHTML = "logout";
-    loginLinkEl.addEventListener("click", onDisconnect, { once: true });
-
-    function onDisconnect(e) {
-      e.preventDefault();
-      dashboard.onDisconnectUser(e);
-      loginLinkEl.innerHTML = "login";
-    }
-  }
+  const config = await response.json();
+  return config;
 }
 
 function handleError(error) {
@@ -55,10 +86,13 @@ function handleError(error) {
 
   if (error instanceof ErrorJson) {
     console.warn(error);
+
     const errorBoundary = elementCatchError(error);
+
     gallery.insertAdjacentElement("beforeend", errorBoundary);
   } else {
     console.error(error);
+
     gallery.innerHTML = `<p class="error-container">Projets indisponible!</p>`;
   }
 }
@@ -74,5 +108,3 @@ async function fetchData(url) {
   }
   return res.json();
 }
-
-// La fonction fetchData a été créée pour gérer les requêtes HTTP et les erreurs associées.
