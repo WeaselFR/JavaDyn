@@ -29,7 +29,11 @@ loadConfig()
 
       const loginLinkEl = document.querySelector(".login-link");
 
-      isLogin() ? admin() : visitor();
+      if (isLogin()) {
+        admin();
+      } else {
+        visitor();
+      }
 
       function visitor() {
         const gallery = new Gallery(...datas);
