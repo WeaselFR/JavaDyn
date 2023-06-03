@@ -1,3 +1,32 @@
+async function loadConfig() {
+  const response = await fetch('config.json');
+  if (!response.ok) {
+    throw new Error('Impossible de charger la configuration');
+  }
+  const config = await response.json();
+  return config;
+}
+
+function isLogin() {
+  return false;
+}
+
+function handleError(error) {
+  const gallery = document.querySelector(".gallery");
+
+  if (error instanceof ErrorJson) {
+    console.warn(error);
+
+    const errorBoundary = elementCatchError(error);
+
+    gallery.insertAdjacentElement("beforeend", errorBoundary);
+  } else {
+    console.error(error);
+
+    gallery.innerHTML = `<p class="error-container">Projets indisponible!</p>`;
+  }
+}
+
 loadConfig()
   .then(async (config) => {
     const { api } = config;
@@ -75,31 +104,6 @@ loadConfig()
     }
   })
   .catch(handleError);
-
-async function loadConfig() {
-  const response = await fetch('config.json');
-  if (!response.ok) {
-    throw new Error('Impossible de charger la configuration');
-  }
-  const config = await response.json();
-  return config;
-}
-
-function handleError(error) {
-  const gallery = document.querySelector(".gallery");
-
-  if (error instanceof ErrorJson) {
-    console.warn(error);
-
-    const errorBoundary = elementCatchError(error);
-
-    gallery.insertAdjacentElement("beforeend", errorBoundary);
-  } else {
-    console.error(error);
-
-    gallery.innerHTML = `<p class="error-container">Projets indisponible!</p>`;
-  }
-}
 
 async function fetchData(url) {
   const res = await fetch(url);
