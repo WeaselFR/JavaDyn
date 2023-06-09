@@ -1,100 +1,55 @@
-function isLogin() {
-  const token = localStorage.getItem("token");
-  return token !== null;
-}
+// ------- Requête API ---------------------------
 
-function loadConfig() {
-  return fetch('config.json')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Impossible de charger la configuration');
-      }
-      return response.json();
-    });
-}
-
-function handleSubmit(e) {
-  e.preventDefault();
-
-  const targetEl = e.target;
-
-  if (!targetEl.reportValidity()) {
-    return;
-  }
-
-  const errorMessageEl = document.querySelector(".errorMessage");
-  if (errorMessageEl) {
-    errorMessageEl.remove();
-  }
-
-  const [email, password] = getEmailAndPassword();
-
-  if (!email) {
-    insertErrorMessageElement("Saisissez votre adresse e-mail!");
-    return;
-  }
-
-  if (!password) {
-    insertErrorMessageElement("Saisissez votre mot de passe!");
-    return;
-  }
-
-  loadConfig()
-    .then(config => loginUser(config, email, password))
-    .then(result => {
-      if (result.isAdmin) {
-        // Si l'utilisateur connecté est un administrateur, redirigez vers la page d'administration
-        window.location.href = "../admin";
-      } else {
-        // Sinon, redirigez vers la page principale
-        window.location.href = "../";
-      }
-    })
-    .catch(error => {
-      if (error instanceof ErrorJson) {
-        insertErrorMessageElement(error.sorry);
-      } else {
-        console.error(error);
-      }
-    });
-}
-
-function getEmailAndPassword() {
-  const inputs = document.querySelectorAll('#loginForm input:not(input[type="submit"])');
-  return Array.from(inputs).map(({ value }) => value || "");
-}
-
-function insertErrorMessageElement(errorMessage) {
-  const targetEl = document.querySelector("#loginForm");
-  targetEl.insertAdjacentHTML(
-    "afterbegin",
-    `<p class="errorMessage">${errorMessage}</p>`
-  );
-}
-
-function loginUser(config, email, password) {
-  return fetch(`${config.api}/users/login`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json;charset=utf-8",
-    },
-    body: JSON.stringify({ email, password }),
-  })
-  .then(res => {
-    if (res.status !== 200) {
-      const { status, statusText } = res;
-      throw new ErrorJson({
-        status: status,
-        sorry: "Votre e-mail ou votre mot de passe est incorrect!",
-        statusText: statusText,
-      });
-    }
-    return res.json();
+function requestLogin() {
+  return fetch("http://localhost:5678/api/users/login", {
+      method: 'POST',
+      headers: {
+          "Content-type": "application/json"
+      },
+      body: JSON.stringify({
+          "email": stockInputEmail,
+          "password": stockInputPassword,
+      })
   });
-}
+};
+// ---- Récupération du dom -----------------------------------------
+const inputPassword = document.querySelector('input[type="password"]');
+const inputEmail = document.querySelector('input[type="email"]');
+const submit = document.querySelector('input[type="submit"]');
+const errorDisplay = document.querySelector('.error');
+const login = document.getElementById("login")
+//------ Variable de stockage valeur 
 
-if (isLogin()) {
-  window.location.href = "../";
-} else {
-  document.querySelector("#loginForm").addEventListener("submit", handleSubmit);
-}
+let stockInputPassword = inputPassword.value;
+let stockInputEmail = inputEmail.value;
+//--------- Evénement click formulaire + check 
+
+submit.addEventListener('click', (e) => {
+  e.preventDefault();
+  stockInputEmail = inputEmail.value;
+  stockInputPassword = inputPassword.value;
+  requestLogin()
+      .then((response) => response.json())
+      .then(login => {
+          console.log(login);
+          if (login.token) {
+              localStorage.setItem('token', login.token);
+              isUserLogged = true;
+              window.location.href = "./index.html";
+              console.log("Utilisateur connécté");
+          } else {
+              console.error("Le token n'a pas été trouvé");
+              errorDisplay.innerHTML = "Identifiant ou Mot de passe incorrect";
+          };
+      });
+});
+
+// ------ Récupération des données --------------
+
+inputEmail.addEventListener('input', (e) => {
+  console.log(e.target.value);
+
+});
+inputPassword.addEventListener('input', (e) => {
+  console.log(e.target.value);
+});
